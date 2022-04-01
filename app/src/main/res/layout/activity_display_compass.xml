@@ -6,6 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".DisplayCompassActivity">
 
+    <TextView
+        android:id="@+id/degreeTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="28dp"
+        android:text="@string/init_direction"
+        android:textAlignment="center"
+        android:textColor="#000"
+        android:textSize="35sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/compassImageView"
         android:layout_width="327dp"
@@ -14,18 +30,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/compass_v1" />
-
-    <TextView
-        android:id="@+id/degreeTextView"
-        android:layout_width="185dp"
-        android:layout_height="29dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="68dp"
-        android:text="Heading: 0.0"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:srcCompat="@drawable/compass_v1"
+        android:layout_below="@+id/degreeTextView" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

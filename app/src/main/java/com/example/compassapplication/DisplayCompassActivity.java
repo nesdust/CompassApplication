@@ -26,6 +26,11 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
 
     TextView degreeTextView;
 
+    //
+
+    private float[] prevAccReading = new float[3];
+    private float[] prevMagReading = new float[3];
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,20 +59,22 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
     protected void onResume() {
         super.onResume();
         // code for system's orientation sensor registered listeners
-        //sensorManager.registerListener(this, sensorManager.getOrientation(),
-        //        SensorManager.SENSOR_DELAY_GAME);
-        System.out.println("inside onResume");
-        sensorManager.registerListener(this,  sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_GAME);
+        //System.out.println("inside onResume");
+        //sensorManager.registerListener(this,  sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+        //        SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
 
         // get the angle around the z-axis rotated
-        float degree = Math.round(event.values[0]);
+        System.out.println("event values: " + Math.toDegrees(event.values[2]));
+        float degree = Math.round(Math.toDegrees(event.values[2]));
 
-        degreeTextView.setText("Heading: " + Float.toString(degree) + " degrees");
+        String newDegStr = "Heading: " + Float.toString(degree) + " degrees";
+        degreeTextView.setText(newDegStr);
 
         // create a rotation animation (reverse turn degree degrees)
         RotateAnimation ra = new RotateAnimation(
