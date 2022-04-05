@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Compass Application</string>
     <string name="button_compass">COMPASS</string>
+    <string name="button_acc">ACCELEROMETER</string>
     <string name="init_direction">Heading: 0.0</string>
+    <string name="acc_title">Acceleration values:</string>
+    <string name="init_values">X: 0.0 \nY: 0.0 \nZ: 0.0</string>
+    <string name="test_values">X: 1.0 \nY: 1.0 \nZ: 1.0</string>
 
 </resources>
