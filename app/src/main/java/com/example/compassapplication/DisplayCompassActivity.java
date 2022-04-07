@@ -1,13 +1,16 @@
 package com.example.compassapplication;
 
+//import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+//import android.os.Build;
 import android.os.Bundle;
+//import android.os.VibrationEffect;
+//import android.os.Vibrator;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
@@ -40,6 +43,13 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
     private float[] rotationMatrix = new float[9];
     private float[] orientationVector = new float[3];
 
+    private final static float alpha = 0.10f;
+
+    //private Vibrator vib;
+    //private VibrationEffect vibEff; // = (int) EFFECT_TICK;
+
+    private boolean hasMagReading, hasAccReading;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,13 +68,16 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         // Register listeners for accelerometer and magnetometer sensor
-        sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_GAME);
         //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-                //SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
+        //SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
 
-        sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_GAME);
         //sensorManager.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-                //SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
+        //SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
+
+        hasMagReading = false;
+        hasAccReading = false;
     }
 
     @Override
@@ -78,66 +91,33 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
 
         // Makes deepcopy of the sensor event values to either prevAccReading eller prevMagReading
         // now instead low pass filter, inspo from https://developer.android.com/reference/android/hardware/SensorEvent#values
-        float alpha  = 0.15f;
 
+        // ACCELEROMETER READING
         if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            if(prevAccReading == null) {
+            System.arraycopy(event.values, 0, prevAccReading,0, event.values.length);
+            if(!hasAccReading) {
                 System.arraycopy(event.values, 0, prevAccReading,0, event.values.length);
+                hasAccReading = true;
             }else {
-                prevAccReading[0] = alpha * prevAccReading[0] + alpha * (event.values[0] - prevAccReading[0]);
-                prevAccReading[1] = alpha * prevAccReading[1] + alpha * (event.values[1] - prevAccReading[1]);
-                prevAccReading[2] = alpha * prevAccReading[2] + alpha * (event.values[2] - prevAccReading[2]);
-            }
-        } else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            if(prevMagReading == null) {
-                System.arraycopy(event.values, 0, prevMagReading,0, event.values.length);
-            }else{
-                prevMagReading[0] = prevMagReading[0] + alpha * (event.values[0] - prevMagReading[0]);
-                prevMagReading[1] = prevMagReading[1] + alpha * (event.values[1] - prevMagReading[1]);
-                prevMagReading[2] = prevMagReading[2] + alpha * (event.values[2] - prevMagReading[2]);
+                float [] valuesClone = event.values.clone();
+                for(int i = 0; i < valuesClone.length; i++) {
+                    prevAccReading[i] = prevAccReading[i] + alpha * (valuesClone.clone()[i] - prevAccReading[i]);
+                }
             }
 
+        // MAGNETOMETER READING
+        } else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            if(!hasMagReading) {
+                System.arraycopy(event.values, 0, prevMagReading, 0, event.values.length);
+                hasMagReading = true;
+            }else{
+                float [] valuesClone = event.values.clone();
+                for(int i = 0; i < valuesClone.length; i++) {
+                    prevMagReading[i] = prevMagReading[i] + alpha * (valuesClone[i] - prevMagReading[i]);
+                }
+            }
         }
         updateAnimation();
-    }
-    private void updateAnimation(){
-        // https://www.raywenderlich.com/10838302-sensors-tutorial-for-android-getting-started
-        // but converted to java
-        boolean valid_reading = SensorManager.getRotationMatrix(rotationMatrix, null, prevAccReading, prevMagReading);
-
-        if(valid_reading){
-            //gets and updates orientation vector
-            float[] orientation = SensorManager.getOrientation(rotationMatrix, orientationVector);
-
-            //return the angle around the z-axis rotated (Azizmuth)
-            float degree = (float) ((Math.toDegrees(orientation[0]) + 360.0) % 360.0);
-            degree = Math.round(degree); //Math.round(degree * 100) / 100;
-            if(degree == 360.0f){
-                degree = 0.0f;
-            }
-
-            // taken from https://www.codespeedy.com/simple-compass-code-with-android-studio/
-            // to animate rotation
-
-            // setText complains when using string concatenation directly in func call
-            String newDegStr = "Heading: " + degree + " degrees";
-            degreeTextView.setText(newDegStr);
-
-
-            // create a rotation animation (reverse turn degree degrees)
-            RotateAnimation ra = new RotateAnimation(currentDegree, -degree,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f);
-
-            // how long the animation will take place
-            ra.setDuration(210);
-            // set the animation after the end of the reservation status
-            ra.setFillAfter(true);
-
-            // Start the animation
-            image.startAnimation(ra);
-            currentDegree = -degree;
-        }
     }
 
     @Override
@@ -146,17 +126,66 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
 
         // to stop the listener and save battery
         sensorManager.unregisterListener(this);
+        sensorManager.unregisterListener(this, accelerometer);
+        sensorManager.unregisterListener(this, magneticField);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         // activate listeners for the sensors accelerometer and magneticField
-        sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_GAME);
+        //sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
         //sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
 
-        sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_GAME);
+        //sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
         //sensorManager.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
+    }
+
+
+    private void updateAnimation(){
+        // https://www.raywenderlich.com/10838302-sensors-tutorial-for-android-getting-started
+        // but converted to java
+
+        if(hasMagReading && hasAccReading){
+            SensorManager.getRotationMatrix(rotationMatrix, null, prevAccReading, prevMagReading);
+
+            //gets and updates orientation vector
+            float[] orientation = SensorManager.getOrientation(rotationMatrix, orientationVector);
+
+            //return the angle around the z-axis rotated (Azizmuth)
+            float degree = (float) (Math.toDegrees(orientation[0]) + 360) % 360;
+            //float degree = (float) (((orientation[0] * 180) / Math.PI) + 180);
+            degree = Math.round(degree);
+
+            // taken from https://www.codespeedy.com/simple-compass-code-with-android-studio/
+            // to animate rotation
+
+            // setText complains when using string concatenation directly in func call
+            String newDegStr = "Heading: " + degree + " degrees";
+            degreeTextView.setText(newDegStr);
+
+            // create a rotation animation (reverse turn degree degrees)
+            RotateAnimation ra = new RotateAnimation(
+                    currentDegree,
+                    -degree,
+                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    Animation.RELATIVE_TO_SELF,
+                    0.5f);
+
+            // how long the animation will take place
+            ra.setDuration(210);
+            // set the animation after the end of the reservation status
+            ra.setFillAfter(true);
+
+            // Start the animation
+            image.startAnimation(ra);
+
+            currentDegree = -degree;
+        } else {
+            System.out.println("No valid reading");
+        }
     }
 
     @Override

@@ -121,19 +121,6 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
             animation.setDuration(10);
             animation.start();
         }
-        /*
-        final float alpha = 0.8f;
-
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        linear_acceleration[0] = ((float) (Math.round((event.values[0] - gravity[0])*100)/100.0));
-        linear_acceleration[1] = ((float) (Math.round((event.values[1] - gravity[1])*100)/100.0));
-        linear_acceleration[2] = ((float) (Math.round((event.values[2] - gravity[2])*100)/100.0));
-        //String newValues = "X: " + linear_acceleration[0] + "\nY: " + linear_acceleration[1] + "\nZ: " + linear_acceleration[2];
-
-         */
     }
 
     @Override

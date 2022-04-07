@@ -26,12 +26,12 @@
         android:id="@+id/compassImageView"
         android:layout_width="327dp"
         android:layout_height="280dp"
+        android:layout_below="@+id/degreeTextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/compass_v1"
-        android:layout_below="@+id/degreeTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/degreeTextView"
+        app:srcCompat="@drawable/compass_v1" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
