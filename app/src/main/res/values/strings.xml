@@ -6,5 +6,7 @@
     <string name="acc_title">Acceleration values:</string>
     <string name="init_values">X: 0.0 \nY: 0.0 \nZ: 0.0</string>
     <string name="test_values">X: 1.0 \nY: 1.0 \nZ: 1.0</string>
+    <string name="init_santa"></string>
+    <string name="heading_santa">Lets go and see santa</string>
 
 </resources>
