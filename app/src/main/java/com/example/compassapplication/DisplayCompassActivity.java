@@ -1,23 +1,16 @@
 package com.example.compassapplication;
 
-//import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-//import android.os.Build;
-import android.media.Image;
 import android.os.Bundle;
-//import android.os.VibrationEffect;
-//import android.os.Vibrator;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class DisplayCompassActivity extends AppCompatActivity implements SensorEventListener{
@@ -55,12 +48,7 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
     private float[] rotationMatrix = new float[9];
     private float[] orientationVector = new float[3];
 
-    private float[] sumOrientation = new float[3];
-
-    private final static float alpha = 0.15f;
-
-    //private Vibrator vib;
-    //private VibrationEffect vibEff; // = (int) EFFECT_TICK;
+    private final static float alpha = 0.10f;
 
     private boolean hasMagReading, hasAccReading;
 
@@ -70,9 +58,6 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_compass);
-
-        //relativeLayout = findViewById(R.id.compassRelativeLayout);
-        //relativeLayout.setBackgroundColor(Color.RED);
 
         // retrives the image view for the compass
         image = (ImageView) findViewById(R.id.compassImageView);
@@ -93,12 +78,10 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        // Seems to go to resume() when created so maby remove.
         // Register listeners for accelerometer and magnetometer sensor
         sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-
         sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
 
         hasMagReading = false;
         hasAccReading = false;
@@ -115,12 +98,11 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
             return;
         }
 
-        // Makes deepcopy of the sensor event values to either prevAccReading eller prevMagReading
-        // now instead low pass filter, inspo from https://developer.android.com/reference/android/hardware/SensorEvent#values
-
+        // Low-pass filter (inside for-loops), variant of:
+        //
         // ACCELEROMETER READING
         if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            System.arraycopy(event.values, 0, prevAccReading,0, event.values.length);
+            //System.arraycopy(event.values, 0, prevAccReading,0, event.values.length);
             if(!hasAccReading) {
                 System.arraycopy(event.values, 0, prevAccReading,0, event.values.length);
                 hasAccReading = true;
@@ -150,7 +132,7 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
             float[] orientations = SensorManager.getOrientation(rotationMatrix, orientationVector);
             //convert the angle around the z-axis rotated (Azizmuth) to degrees
             int degree = (int) (Math.toDegrees(orientations[0]) + 360) % 360;
-            degree = Math.round(degree);
+            //degree = Math.round(degree);
 
             //update textView
             updateHeadingText(degree);
@@ -168,7 +150,8 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
     private void updateHeadingText(int degree) {
         updateDirection(degree);
 
-        String newDegStr = "Heading: " + degree + " " + newHeading;
+        //String newDegStr = "Heading: " + degree + " " + newHeading;
+        String newDegStr = degree + " " + newHeading;
         degreeTextView.setText(newDegStr);
     }
 
@@ -190,7 +173,7 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
         int t = Math.abs(degDiff * 100);
         ra.setDuration(t);
         // set the animation after the end of the reservation status
-        //ra.setFillAfter(true);
+        ra.setFillAfter(true);
 
         // Start the animation
         image.startAnimation(ra);
@@ -204,14 +187,12 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
 
     private void checkSantaHeading() {
         if(newHeading == "N" && !headingSanta) {
-            //santaTextView.setText("Lets go and see santa");
             santaTextView.setVisibility(View.VISIBLE);
             santaImageView.setVisibility(View.VISIBLE);
             headingSanta = true;
         }else if(newHeading != "N" && headingSanta){
             santaImageView.setVisibility(View.INVISIBLE);
             santaTextView.setVisibility(View.INVISIBLE);
-            //santaTextView.setText("");
             headingSanta = false;
         }
     }
@@ -261,12 +242,7 @@ public class DisplayCompassActivity extends AppCompatActivity implements SensorE
         super.onResume();
         // activate listeners for the sensors accelerometer and magneticField
         sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, accelerometer,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-
         sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, magneticField,  SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
-        //sensorManager.registerListener(this, magneticField, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override

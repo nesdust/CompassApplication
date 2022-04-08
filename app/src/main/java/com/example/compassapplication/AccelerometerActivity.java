@@ -42,14 +42,14 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
     // ----- ImageViews -------
     ImageView androidImageView;
 
-    private float pos, prevPos;
+    private float yPos, yPrevPos = 0.0f;
+    private float xPos, xPrevPos = 0.0f;
 
     // ----- Vibrator -------
     private Vibrator vib;
     private VibrationEffect vibEff; // = (int) EFFECT_TICK;
 
-    private boolean hasVibedRight = false;
-    private boolean hasVibedLeft = false;
+    private boolean hasVibedRight,hasVibedLeft, hasVibedUp, hasVibedDown = false;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -64,16 +64,10 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
 
-        pos = 0;
-        prevPos = 0;
-
         vib = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         // Fix: use one of the alternatives to handle OS version
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibEff = VibrationEffect.createOneShot(50, 128);
-        }else{
-            vibEff = VibrationEffect.createOneShot(50, 128); //(VibrationEffect) EFFECT_HEAVY_CLICK;
-        }
+        vibEff = VibrationEffect.createOneShot(50, 128);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -88,38 +82,64 @@ public class AccelerometerActivity extends AppCompatActivity implements SensorEv
         String newValues = "X: " + accelerometerReading[0] + "\nY: " + accelerometerReading[1] + "\nZ: " + accelerometerReading[2];
         accValuesTextView.setText(newValues);
 
+        updateKord(accelerometerReading[0], accelerometerReading[1]);
+
+        // don´t animate if not moved
+        if(xPrevPos != xPos || yPrevPos != yPos){
+            ObjectAnimator xAnimation = ObjectAnimator.ofFloat(androidImageView, "translationX", xPos);
+            ObjectAnimator yAnimation = ObjectAnimator.ofFloat(androidImageView, "translationY", yPos);
+            xAnimation.setDuration(10);
+            yAnimation.setDuration(10);
+            xAnimation.start();
+            yAnimation.start();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void updateKord(float newX, float newY) {
         /*
          * bounds:
          * right/left: +-450
          * up: -300
          * down: 700
          */
-        prevPos = pos;
-        if (accelerometerReading[0] < -1) {
-            if(pos < 450){ // hasn´t hit wall, move in right direction
-                pos += 10;
+        xPrevPos = xPos;
+        yPrevPos = yPos;
+        if (newX < -1) {
+            if(xPos < 450){ // hasn´t hit wall, move in right direction
+                xPos += 10;
                 hasVibedLeft = false;
-            }else if(pos >= 450 && !hasVibedRight){ // hit wall -> vibrate (one time untill move right)
+            }else if(xPos >= 450 && !hasVibedRight){ // hit wall -> vibrate (one time untill move right)
                 hasVibedRight = true;
                 //vib.vibrate(EFFECT_HEAVY_CLICK);
                 vib.vibrate(vibEff);
             }
-        } else if(accelerometerReading[0] > 1) {
-            if(pos > -450) { // hasn´t hit wall move in Left direction
-                pos -= 10;
+        }else if(newX > 1) {
+            if(xPos > -450) { // hasn´t hit wall move in Left direction
+                xPos -= 10;
                 hasVibedRight = false;
-            }else if(pos <= -450 && !hasVibedLeft){ // hit wall -> vibrate (one time untill move right)
+            }else if(xPos <= -450 && !hasVibedLeft){ // hit wall -> vibrate (one time untill move right)
                 hasVibedLeft = true;
                 //vib.vibrate(EFFECT_HEAVY_CLICK);
                 vib.vibrate(vibEff);
             }
         }
-
-        // don´t animate if not moved
-        if(prevPos != pos){
-            ObjectAnimator animation = ObjectAnimator.ofFloat(androidImageView, "translationX", pos);
-            animation.setDuration(10);
-            animation.start();
+        if (newY > 1) {
+            if(yPos < 700){ // hasn´t hit wall, move in right direction
+                yPos += 10;
+                hasVibedDown = false;
+            }else if(yPos >= 700 && !hasVibedUp){ // hit wall -> vibrate (one time untill move right)
+                hasVibedUp = true;
+                vib.vibrate(vibEff);
+            }
+        } else if(newY < -1) {
+            if(yPos > -700) { // hasn´t hit wall move in Left direction
+                yPos -= 10;
+                hasVibedUp = false;
+            }else if(yPos <= -700 && !hasVibedDown){ // hit wall -> vibrate (one time untill move right)
+                hasVibedDown = true;
+                vib.vibrate(vibEff);
+            }
         }
     }
 
